@@ -1,13 +1,18 @@
-import { Link, Outlet, useLoaderData } from "react-router-dom";
-import { getContacts } from "../contacts";
-export async function loader() {
-  const contacts = await getContacts();
-  return { contacts };
-}
+import { useEffect } from "react";
+import {
+  Form,
+  NavLink,
+  Outlet,
+  useLoaderData,
+  useNavigation,
+} from "react-router-dom";
 
 export default function Root() {
-  const { contacts } = useLoaderData();
-  console.log(contacts);
+  const { contacts, q } = useLoaderData();
+  const navigation = useNavigation();
+  useEffect(() => {
+    document.getElementById("q").value = q;
+  }, []);
   return (
     <>
       <div id="sidebar">
@@ -20,20 +25,26 @@ export default function Root() {
               placeholder="Search"
               type="search"
               name="q"
+              defaultValue={q}
             />
             <div id="search-spinner" aria-hidden hidden={true} />
             <div className="sr-only" aria-live="polite"></div>
           </form>
-          <form method="post">
+          <Form method="post">
             <button type="submit">New</button>
-          </form>
+          </Form>
         </div>
         <nav>
           {contacts.length ? (
             <ul>
               {contacts.map((contact) => (
                 <li key={contact.id}>
-                  <Link to={`contacts/${contact.id}`}>
+                  <NavLink
+                    className={({ isActive, isPending }) =>
+                      isActive ? "active" : isPending ? "pending" : ""
+                    }
+                    to={`contacts/${contact.id}`}
+                  >
                     {contact.first || contact.last ? (
                       <>
                         {contact.first} {contact.last}
@@ -42,7 +53,7 @@ export default function Root() {
                       <i>No Name</i>
                     )}{" "}
                     {contact.favorite && <span>★</span>}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -53,7 +64,10 @@ export default function Root() {
           )}
         </nav>
       </div>
-      <div id="detail">
+      <div
+        className={navigation.state === "loading" ? "loading" : ""}
+        id="detail"
+      >
         <Outlet />
       </div>
     </>
